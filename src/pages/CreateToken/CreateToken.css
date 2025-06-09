@@ -1,67 +1,18 @@
-.token-form {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.image-upload-container {
-  position: relative;
-  width: 100%;
-  max-width: 300px;
-  height: 300px;
-  margin: 0 auto 20px;
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #f8f8f8;
-}
-
-.token-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.token-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.change-image-button {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  --background: rgba(0, 0, 0, 0.5);
-  --color: white;
-}
-
-.upload-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: #666;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.upload-placeholder:hover {
-  background-color: #f0f0f0;
-}
-
-.upload-placeholder p {
-  margin: 10px 0;
-  font-size: 16px;
-}
-
 ion-item {
   margin-bottom: 16px;
 }
 
 ion-button {
   margin-top: 24px;
+}
+
+.card-wrapper {
+  margin-bottom: 24px;
+}
+
+.card-wrapper
+  .ant-upload-list.ant-upload-list-picture-card
+  .ant-upload-list-item-container {
+  width: 100% !important;
+  height: 300px !important;
 }

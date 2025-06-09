@@ -9,40 +9,65 @@ import {
   IonInput,
   IonTextarea,
   IonButton,
-  IonFab,
-  IonFabButton,
   IonIcon,
-  IonImg,
   IonActionSheet,
-  IonButtons,
+  IonText,
 } from "@ionic/react";
 import { camera, image, add } from "ionicons/icons";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
+import { Upload } from "antd";
+import type { UploadFileStatus } from "antd/es/upload/interface";
 import "./CreateToken.css";
+import { usePhotoGallery } from "../../hooks/usePhotoGallery";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 
 const CreateToken: React.FC = () => {
   const [tokenName, setTokenName] = useState("");
   const [tokenDescription, setTokenDescription] = useState("");
-  const [tokenImage, setTokenImage] = useState<string | null>(null);
   const [showActionSheet, setShowActionSheet] = useState(false);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setTokenImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const { photos, takePhoto, deletePhoto } = usePhotoGallery();
+
+  const fileList = photos.map((photo, idx) => ({
+    uid: String(idx),
+    name: photo.filepath,
+    status: "done" as UploadFileStatus,
+    url: photo.webviewPath,
+  }));
+
+  // const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onload = (e) => {
+  //       setTokenImage(e.target?.result as string);
+  //       setFileList([
+  //         {
+  //           uid: "-1",
+  //           name: file.name,
+  //           status: "done",
+  //           url: e.target?.result as string,
+  //         },
+  //       ]);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
 
   const handleCreateToken = () => {
     // Here you would implement the token creation logic
     console.log({
       name: tokenName,
       description: tokenDescription,
-      image: tokenImage,
+      image: photos?.[0]?.webviewPath,
+    });
+  };
+
+  const selectFromGallery = async () => {
+    const cameraPhoto = await Camera.getPhoto({
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Photos,
+      quality: 90,
     });
   };
 
@@ -54,31 +79,36 @@ const CreateToken: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
-        <div className="token-form">
-          <div className="image-upload-container">
-            {tokenImage ? (
-              <div className="token-image-wrapper">
-                <IonImg src={tokenImage} className="token-image" />
-                <IonButton
-                  fill="clear"
-                  className="change-image-button"
-                  onClick={() => setShowActionSheet(true)}
+        <div>
+          <div
+            onClick={() => setShowActionSheet(true)}
+            className="card-wrapper"
+          >
+            <Upload
+              openFileDialogOnClick={false}
+              listType="picture-card"
+              multiple={false}
+              fileList={fileList}
+              onRemove={(file) => {
+                deletePhoto(file.name);
+              }}
+              style={{
+                width: "100%",
+                height: "300px",
+              }}
+            >
+              {!photos?.[0]?.webviewPath && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
                 >
-                  Change Image
-                </IonButton>
-              </div>
-            ) : (
-              <div
-                className="upload-placeholder"
-                onClick={() => setShowActionSheet(true)}
-              >
-                <IonIcon icon={add} size="large" />
-                <p>Add Token Image</p>
-                <IonButton fill="clear" size="small">
-                  Upload Image
-                </IonButton>
-              </div>
-            )}
+                  <IonIcon icon={add} size="large" color="primary" />
+                  <IonText color="primary">Upload</IonText>
+                </div>
+              )}
+            </Upload>
           </div>
 
           <IonItem>
@@ -116,24 +146,12 @@ const CreateToken: React.FC = () => {
             {
               text: "Take Photo",
               icon: camera,
-              handler: () => {
-                // Implement camera functionality
-                console.log("Take photo clicked");
-              },
+              handler: takePhoto,
             },
             {
               text: "Choose from Gallery",
               icon: image,
-              handler: () => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = "image/*";
-                input.onchange = (e) =>
-                  handleImageUpload(
-                    e as unknown as ChangeEvent<HTMLInputElement>
-                  );
-                input.click();
-              },
+              handler: selectFromGallery,
             },
             {
               text: "Cancel",
