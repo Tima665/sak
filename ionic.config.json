@@ -1,0 +1,8 @@
+{
+  "name": "sak",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite",
+  "id": "34659eec"
+}
