@@ -21,7 +21,7 @@ import { useState } from 'react';
 
 import { usePhotoGallery } from '../../hooks/usePhotoGallery';
 
-import './CreateToken.css';
+// import './CreateToken.css';
 
 const CreateToken: React.FC = () => {
   const [tokenName, setTokenName] = useState('');
@@ -65,7 +65,7 @@ const CreateToken: React.FC = () => {
         <div>
           <div
             onClick={() => setShowActionSheet(true)}
-            className="card-wrapper"
+            className="card-wrapper mb-6"
           >
             <Upload
               openFileDialogOnClick={false}
@@ -81,12 +81,7 @@ const CreateToken: React.FC = () => {
               }}
             >
               {!photos?.[0]?.webviewPath && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
+                <div className="flex items-center">
                   <IonIcon icon={add} size="large" color="primary" />
                   <IonText color="primary">Upload</IonText>
                 </div>
@@ -94,7 +89,7 @@ const CreateToken: React.FC = () => {
             </Upload>
           </div>
 
-          <IonItem>
+          <IonItem className="mb-4">
             <IonLabel position="stacked">Token Name</IonLabel>
             <IonInput
               value={tokenName}
