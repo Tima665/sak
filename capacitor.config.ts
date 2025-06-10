@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.saktimur.app',
+  appId: 'com.timur.sak',
   appName: 'sak',
   webDir: 'dist',
 };
