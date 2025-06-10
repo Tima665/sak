@@ -39,7 +39,10 @@ import '@ionic/react/css/display.css';
 /* import '@ionic/react/css/palettes/dark.class.css'; */
 import '@ionic/react/css/palettes/dark.system.css';
 
+import { PrivyProvider } from './components/PrivyProvider';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { CreateToken } from './pages/CreateToken';
+import { Login } from './pages/Login';
 import Tab2 from './pages/Tab2';
 import Tab3 from './pages/Tab3';
 import { routes } from './routes';
@@ -47,40 +50,43 @@ import { routes } from './routes';
 setupIonicReact();
 
 const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonTabs>
-        <IonRouterOutlet>
-          <Route exact path={routes.createToken}>
-            <CreateToken />
-          </Route>
-          <Route exact path="/tab2">
-            <Tab2 />
-          </Route>
-          <Route path="/tab3">
-            <Tab3 />
-          </Route>
-          <Route exact path="/">
-            <Redirect to={routes.createToken} />
-          </Route>
-        </IonRouterOutlet>
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="create-token" href={routes.createToken}>
-            <IonIcon aria-hidden="true" icon={logoBitcoin} />
-            <IonLabel>Create Token</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab2" href="/tab2">
-            <IonIcon aria-hidden="true" icon={ellipse} />
-            <IonLabel>Tab 2</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab3" href="/tab3">
-            <IonIcon aria-hidden="true" icon={square} />
-            <IonLabel>Tab 3</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
-    </IonReactRouter>
-  </IonApp>
+  <PrivyProvider>
+    <IonApp>
+      <IonReactRouter>
+        <IonTabs>
+          <IonRouterOutlet>
+            <Route exact path="/login">
+              <Login />
+            </Route>
+            <ProtectedRoute
+              exact
+              path={routes.createToken}
+              component={CreateToken}
+            />
+            <ProtectedRoute exact path="/tab2" component={Tab2} />
+            <ProtectedRoute path="/tab3" component={Tab3} />
+            <Route exact path="/">
+              <Redirect to={routes.createToken} />
+            </Route>
+          </IonRouterOutlet>
+          <IonTabBar slot="bottom">
+            <IonTabButton tab="create-token" href={routes.createToken}>
+              <IonIcon aria-hidden="true" icon={logoBitcoin} />
+              <IonLabel>Create Token</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="tab2" href="/tab2">
+              <IonIcon aria-hidden="true" icon={ellipse} />
+              <IonLabel>Tab 2</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="tab3" href="/tab3">
+              <IonIcon aria-hidden="true" icon={square} />
+              <IonLabel>Tab 3</IonLabel>
+            </IonTabButton>
+          </IonTabBar>
+        </IonTabs>
+      </IonReactRouter>
+    </IonApp>
+  </PrivyProvider>
 );
 
 export default App;
