@@ -12,18 +12,18 @@ import {
   IonIcon,
   IonActionSheet,
   IonText,
-} from "@ionic/react";
-import { camera, image, add } from "ionicons/icons";
-import { useState } from "react";
-import { Upload } from "antd";
-import type { UploadFileStatus } from "antd/es/upload/interface";
-import "./CreateToken.css";
-import { usePhotoGallery } from "../../hooks/usePhotoGallery";
-import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+} from '@ionic/react';
+import { camera, image, add } from 'ionicons/icons';
+import { useState } from 'react';
+import { Upload } from 'antd';
+import type { UploadFileStatus } from 'antd/es/upload/interface';
+import './CreateToken.css';
+import { usePhotoGallery } from '../../hooks/usePhotoGallery';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 const CreateToken: React.FC = () => {
-  const [tokenName, setTokenName] = useState("");
-  const [tokenDescription, setTokenDescription] = useState("");
+  const [tokenName, setTokenName] = useState('');
+  const [tokenDescription, setTokenDescription] = useState('');
   const [showActionSheet, setShowActionSheet] = useState(false);
 
   const { photos, takePhoto, deletePhoto } = usePhotoGallery();
@@ -31,7 +31,7 @@ const CreateToken: React.FC = () => {
   const fileList = photos.map((photo, idx) => ({
     uid: String(idx),
     name: photo.filepath,
-    status: "done" as UploadFileStatus,
+    status: 'done' as UploadFileStatus,
     url: photo.webviewPath,
   }));
 
@@ -93,15 +93,15 @@ const CreateToken: React.FC = () => {
                 deletePhoto(file.name);
               }}
               style={{
-                width: "100%",
-                height: "300px",
+                width: '100%',
+                height: '300px',
               }}
             >
               {!photos?.[0]?.webviewPath && (
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
+                    display: 'flex',
+                    alignItems: 'center',
                   }}
                 >
                   <IonIcon icon={add} size="large" color="primary" />
@@ -144,18 +144,18 @@ const CreateToken: React.FC = () => {
           onDidDismiss={() => setShowActionSheet(false)}
           buttons={[
             {
-              text: "Take Photo",
+              text: 'Take Photo',
               icon: camera,
               handler: takePhoto,
             },
             {
-              text: "Choose from Gallery",
+              text: 'Choose from Gallery',
               icon: image,
               handler: selectFromGallery,
             },
             {
-              text: "Cancel",
-              role: "cancel",
+              text: 'Cancel',
+              role: 'cancel',
             },
           ]}
         />

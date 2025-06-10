@@ -1,3 +1,3 @@
 export const routes = {
-  createToken: "/create-token",
+  createToken: '/create-token',
 };

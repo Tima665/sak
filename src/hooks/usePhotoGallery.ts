@@ -3,12 +3,12 @@ import {
   CameraResultType,
   CameraSource,
   Photo,
-} from "@capacitor/camera";
-import { Directory, Filesystem } from "@capacitor/filesystem";
-import { Preferences } from "@capacitor/preferences";
-import { useEffect, useState } from "react";
+} from '@capacitor/camera';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Preferences } from '@capacitor/preferences';
+import { useEffect, useState } from 'react';
 
-const PHOTO_STORAGE = "photos";
+const PHOTO_STORAGE = 'photos';
 
 export interface UserPhoto {
   filepath: string;
@@ -44,7 +44,7 @@ export function usePhotoGallery() {
       quality: 90,
     });
 
-    const fileName = new Date().getTime() + ".jpeg";
+    const fileName = new Date().getTime() + '.jpeg';
     const savedFileImage = await savePicture(cameraPhoto, fileName);
 
     const newPhotos = [savedFileImage, ...photos];
@@ -54,7 +54,7 @@ export function usePhotoGallery() {
 
   const savePicture = async (
     photo: Photo,
-    fileName: string
+    fileName: string,
   ): Promise<UserPhoto> => {
     const response = await fetch(photo.webPath!);
     const blob = await response.blob();
