@@ -37,25 +37,6 @@ const CreateToken: React.FC = () => {
     url: photo.webviewPath,
   }));
 
-  // const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files?.[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onload = (e) => {
-  //       setTokenImage(e.target?.result as string);
-  //       setFileList([
-  //         {
-  //           uid: "-1",
-  //           name: file.name,
-  //           status: "done",
-  //           url: e.target?.result as string,
-  //         },
-  //       ]);
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
-
   const handleCreateToken = () => {
     // Here you would implement the token creation logic
     console.log({
