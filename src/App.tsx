@@ -39,7 +39,7 @@ import '@ionic/react/css/display.css';
 /* import '@ionic/react/css/palettes/dark.class.css'; */
 import '@ionic/react/css/palettes/dark.system.css';
 
-import CreateToken from './pages/CreateToken/CreateToken';
+import { CreateToken } from './pages/CreateToken';
 import Tab2 from './pages/Tab2';
 import Tab3 from './pages/Tab3';
 import { routes } from './routes';

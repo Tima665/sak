@@ -23,7 +23,7 @@ import { usePhotoGallery } from '../../hooks/usePhotoGallery';
 
 // import './CreateToken.css';
 
-const CreateToken: React.FC = () => {
+export const CreateToken: React.FC = () => {
   const [tokenName, setTokenName] = useState('');
   const [tokenDescription, setTokenDescription] = useState('');
   const [showActionSheet, setShowActionSheet] = useState(false);
@@ -141,5 +141,3 @@ const CreateToken: React.FC = () => {
     </IonPage>
   );
 };
-
-export default CreateToken;
