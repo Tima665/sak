@@ -1,3 +1,4 @@
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import {
   IonContent,
   IonHeader,
@@ -13,13 +14,14 @@ import {
   IonActionSheet,
   IonText,
 } from '@ionic/react';
-import { camera, image, add } from 'ionicons/icons';
-import { useState } from 'react';
 import { Upload } from 'antd';
 import type { UploadFileStatus } from 'antd/es/upload/interface';
-import './CreateToken.css';
+import { camera, image, add } from 'ionicons/icons';
+import { useState } from 'react';
+
 import { usePhotoGallery } from '../../hooks/usePhotoGallery';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+
+import './CreateToken.css';
 
 const CreateToken: React.FC = () => {
   const [tokenName, setTokenName] = useState('');

@@ -1,4 +1,3 @@
-import { Redirect, Route } from 'react-router-dom';
 import {
   IonApp,
   IonIcon,
@@ -11,9 +10,7 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { ellipse, square, triangle } from 'ionicons/icons';
-import CreateToken from './pages/CreateToken/CreateToken';
-import Tab2 from './pages/Tab2';
-import Tab3 from './pages/Tab3';
+import { Redirect, Route } from 'react-router-dom';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -42,8 +39,9 @@ import '@ionic/react/css/display.css';
 /* import '@ionic/react/css/palettes/dark.class.css'; */
 import '@ionic/react/css/palettes/dark.system.css';
 
-/* Theme variables */
-import './theme/variables.css';
+import CreateToken from './pages/CreateToken/CreateToken';
+import Tab2 from './pages/Tab2';
+import Tab3 from './pages/Tab3';
 import { routes } from './routes';
 
 setupIonicReact();
