@@ -1,0 +1,6 @@
+.card-wrapper
+  .ant-upload-list.ant-upload-list-picture-card
+  .ant-upload-list-item-container {
+  width: 100% !important;
+  height: 300px !important;
+}

@@ -21,7 +21,7 @@ import { useState } from 'react';
 
 import { usePhotoGallery } from '../../hooks/usePhotoGallery';
 
-// import './CreateToken.css';
+import './CreateToken.css';
 
 export const CreateToken: React.FC = () => {
   const [tokenName, setTokenName] = useState('');
