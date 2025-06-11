@@ -33,13 +33,16 @@
     "@web3-storage/w3up-client": "^17.3.0",
     "antd": "^5.25.4",
     "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
     "ionicons": "^7.4.0",
     "postcss": "^8.5.4",
+    "process": "^0.11.10",
     "pumpdotfun-sdk": "^1.4.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
+    "stream-browserify": "^3.0.0",
     "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
