@@ -16,6 +16,9 @@ export default defineConfig({
       process: 'process/browser',
     },
   },
+  define: {
+    global: 'globalThis',
+  },
   build: {
     target: 'esnext',
     rollupOptions: {
