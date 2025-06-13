@@ -8,18 +8,16 @@ import Tab2 from '../../pages/Tab2';
 import Tab3 from '../../pages/Tab3';
 import { ProtectedRoute } from '../ProtectedRoute';
 
-export const Routes = () => {
-  return (
-    <IonRouterOutlet>
-      <Route exact path="/login">
-        <Login />
-      </Route>
-      <ProtectedRoute exact path={routes.createToken} component={CreateToken} />
-      <ProtectedRoute exact path="/tab2" component={Tab2} />
-      <ProtectedRoute path="/tab3" component={Tab3} />
-      <Route exact path="/">
-        <Redirect to={routes.createToken} />
-      </Route>
-    </IonRouterOutlet>
-  );
-};
+export const Routes = () => (
+  <IonRouterOutlet>
+    <Route exact path="/login">
+      <Login />
+    </Route>
+    <ProtectedRoute exact path={routes.createToken} component={CreateToken} />
+    <ProtectedRoute exact path="/tab2" component={Tab2} />
+    <ProtectedRoute path="/tab3" component={Tab3} />
+    <Route exact path="/">
+      <Redirect to={routes.createToken} />
+    </Route>
+  </IonRouterOutlet>
+);

@@ -1,4 +1,9 @@
-import { IonApp, IonTabs, setupIonicReact } from '@ionic/react';
+import {
+  IonApp,
+  IonRouterOutlet,
+  IonTabs,
+  setupIonicReact,
+} from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
 /* Core CSS required for Ionic components to work properly */
@@ -39,7 +44,9 @@ const App: React.FC = () => (
     <IonApp>
       <IonReactRouter>
         <IonTabs>
-          <Routes />
+          <IonRouterOutlet>
+            <Routes />
+          </IonRouterOutlet>
           <BottomNavbar />
         </IonTabs>
       </IonReactRouter>
