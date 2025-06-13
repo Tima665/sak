@@ -52,6 +52,10 @@ export const CreateToken: React.FC = () => {
       source: CameraSource.Photos,
       quality: 90,
     });
+
+    if (cameraPhoto.webPath) {
+      takePhoto();
+    }
   };
 
   return (
