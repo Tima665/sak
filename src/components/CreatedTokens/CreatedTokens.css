@@ -1,0 +1,72 @@
+.created-token-card {
+  margin-bottom: 16px;
+}
+
+.token-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.token-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.token-name {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+}
+
+.market-cap {
+  text-align: right;
+}
+
+.token-details {
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 8px;
+}
+
+.mint-address {
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 12px;
+}
+
+.mint-address p {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+.token-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.token-actions ion-button {
+  --border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .token-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .market-cap {
+    text-align: left;
+  }
+
+  .token-actions {
+    justify-content: center;
+  }
+}

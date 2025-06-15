@@ -1,5 +1,5 @@
 import { IonIcon, IonLabel, IonTabBar, IonTabButton } from '@ionic/react';
-import { ellipse, logoBitcoin, square } from 'ionicons/icons';
+import { ellipse, logoBitcoin, trophyOutline } from 'ionicons/icons';
 
 import { routes } from '../../constants';
 
@@ -15,8 +15,8 @@ export const BottomNavbar = () => {
         <IonLabel>Tab 2</IonLabel>
       </IonTabButton>
       <IonTabButton tab="tab3" href="/tab3">
-        <IonIcon aria-hidden="true" icon={square} />
-        <IonLabel>Tab 3</IonLabel>
+        <IonIcon aria-hidden="true" icon={trophyOutline} />
+        <IonLabel>Мои токены</IonLabel>
       </IonTabButton>
     </IonTabBar>
   );
