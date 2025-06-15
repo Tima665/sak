@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+before creating css files, you should check the following sequence:
+1. is there a suitable component in ionic
+2. is there a suitable component in antd
+3. if not, then do not create css files and use tailwind
