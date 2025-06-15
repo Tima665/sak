@@ -1,44 +1,43 @@
 import {
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonItem,
-  IonLabel,
-  IonButton,
-  IonIcon,
   IonSpinner,
-  IonText,
   IonRefresher,
   IonRefresherContent,
-  IonChip,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonImg,
-  IonAvatar,
+  IonIcon,
   RefresherEventDetail,
 } from '@ionic/react';
+import {
+  Card,
+  Avatar,
+  Button,
+  Typography,
+  Divider,
+  message,
+  theme,
+} from 'antd';
 import { formatDistanceToNow, format, isValid, parseISO } from 'date-fns';
 import {
+  logoUsd,
+  trophyOutline,
   copyOutline,
+  linkOutline,
   openOutline,
   timeOutline,
-  trophyOutline,
-  linkOutline,
-  logoUsd,
 } from 'ionicons/icons';
 import React from 'react';
 
 import { useCreatedTokens } from '../../hooks/useCreatedTokens';
 import { CreatedToken } from '../../services/pumpFunCreatedTokensService';
-import './CreatedTokens.css';
+
+const { Meta } = Card;
+const { Text, Title } = Typography;
+const { useToken } = theme;
 
 interface CreatedTokensProps {
   walletAddress: string | null;
 }
 
 const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
+  const { token: themeToken } = useToken();
   const {
     data: tokens,
     isLoading,
@@ -56,9 +55,10 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      // Можно добавить toast уведомление
+      message.success('Address copied to clipboard!');
     } catch (err) {
       console.error('Failed to copy:', err);
+      message.error('Failed to copy address');
     }
   };
 
@@ -110,186 +110,179 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
 
   if (!walletAddress) {
     return (
-      <IonCard>
-        <IonCardContent>
-          <IonText color="medium">
-            <p>Connect wallet to view created tokens</p>
-          </IonText>
-        </IonCardContent>
-      </IonCard>
+      <div className="p-4">
+        <Card className="text-center">
+          <Text type="secondary">Connect wallet to view created tokens</Text>
+        </Card>
+      </div>
     );
   }
 
   if (isLoading) {
     return (
-      <IonCard>
-        <IonCardContent className="ion-text-center">
+      <div className="p-4">
+        <Card className="text-center">
           <IonSpinner name="crescent" />
-          <IonText color="medium">
-            <p>Loading created tokens...</p>
-          </IonText>
-        </IonCardContent>
-      </IonCard>
+          <div className="mt-4">
+            <Text type="secondary">Loading created tokens...</Text>
+          </div>
+        </Card>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <IonCard>
-        <IonCardContent>
-          <IonText color="danger">
-            <p>Error loading created tokens</p>
-            <p>{error.message}</p>
-          </IonText>
-          <IonButton fill="clear" onClick={() => refetch()}>
-            Try again
-          </IonButton>
-        </IonCardContent>
-      </IonCard>
+      <div className="p-4">
+        <Card className="text-center">
+          <Text type="danger">Error loading created tokens</Text>
+          <div className="mt-2">
+            <Text type="secondary">{error.message}</Text>
+          </div>
+          <div className="mt-4">
+            <Button onClick={() => refetch()}>Try again</Button>
+          </div>
+        </Card>
+      </div>
     );
   }
 
   if (!tokens || tokens.length === 0) {
     return (
-      <>
+      <div className="p-4">
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
         </IonRefresher>
-        <IonCard>
-          <IonCardContent>
-            <IonText color="medium">
-              <p>No created tokens found</p>
-              <p>Create your first token on the "Create" tab!</p>
-            </IonText>
-          </IonCardContent>
-        </IonCard>
-      </>
+        <Card className="text-center">
+          <Text type="secondary">No created tokens found</Text>
+          <div className="mt-2">
+            <Text type="secondary">
+              Create your first token on the "Create" tab!
+            </Text>
+          </div>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="p-4">
       <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
         <IonRefresherContent />
       </IonRefresher>
 
-      <IonCard>
-        <IonCardHeader>
-          <IonCardTitle>
-            <IonIcon icon={trophyOutline} style={{ marginRight: '8px' }} />
-            Created Tokens ({tokens.length})
-          </IonCardTitle>
-        </IonCardHeader>
-      </IonCard>
+      <Card className="!mb-6">
+        <Title level={4} className="mb-0">
+          <IonIcon aria-hidden="true" icon={trophyOutline} className="mr-2" />
+          Created Tokens ({tokens.length})
+        </Title>
+      </Card>
 
-      {tokens.map((token: CreatedToken, index: number) => (
-        <IonCard
-          key={`${token.mintAddress}-${index}`}
-          className="created-token-card"
-        >
-          <IonCardContent>
-            <IonGrid>
-              <IonRow>
-                <IonCol size="12">
-                  <div className="token-header">
-                    <div className="token-info-with-image">
-                      <IonAvatar className="token-avatar">
-                        {token.image ? (
-                          <IonImg
-                            src={token.image}
-                            alt={token.name}
-                            onIonError={(e) => {
-                              // Show fallback icon if image fails to load
-                              const target = e.target as HTMLIonImgElement;
-                              const avatar = target.closest('.token-avatar');
-                              if (avatar) {
-                                avatar.innerHTML =
-                                  '<ion-icon name="logo-usd"></ion-icon>';
-                              }
-                            }}
-                          />
-                        ) : (
-                          <IonIcon icon={logoUsd} className="fallback-icon" />
-                        )}
-                      </IonAvatar>
-                      <div className="token-info">
-                        <h3 className="token-name">{token.name}</h3>
-                        <IonChip color="primary" outline>
-                          {token.symbol}
-                        </IonChip>
-                      </div>
-                    </div>
-                    {token.marketCap && (
-                      <div className="market-cap">
-                        <IonText color="success">
-                          <strong>{formatMarketCap(token.marketCap)}</strong>
-                        </IonText>
-                      </div>
-                    )}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {tokens.map((token: CreatedToken, index: number) => (
+          <Card
+            key={`${token.mintAddress}-${index}`}
+            className="w-full"
+            cover={
+              token.image ? (
+                <img
+                  alt={token.name}
+                  src={token.image}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `
+                        <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <div class="text-white text-5xl">💰</div>
+                        </div>
+                      `;
+                    }
+                  }}
+                />
+              ) : (
+                <div className="flex h-48 items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                  <div className="text-5xl text-white">💰</div>
+                </div>
+              )
+            }
+            actions={[
+              <Button
+                key="copy"
+                type="text"
+                icon={<IonIcon icon={copyOutline} />}
+                onClick={() => copyToClipboard(token.mintAddress)}
+                title="Copy mint address"
+              />,
+              <Button
+                key="pumpfun"
+                type="text"
+                icon={<IonIcon icon={linkOutline} />}
+                onClick={() => openInPumpFun(token.mintAddress)}
+                title="View on Pump.fun"
+              />,
+              <Button
+                key="solscan"
+                type="text"
+                icon={<IonIcon icon={openOutline} />}
+                onClick={() => openInSolscan(token.mintAddress)}
+                title="View on Solscan"
+              />,
+            ]}
+          >
+            <Meta
+              avatar={
+                <Avatar
+                  src={token.image}
+                  icon={!token.image ? <IonIcon icon={logoUsd} /> : undefined}
+                  size="large"
+                />
+              }
+              title={
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">{token.name}</span>
+                  {token.marketCap && (
+                    <Text type="success" className="font-semibold">
+                      {formatMarketCap(token.marketCap)}
+                    </Text>
+                  )}
+                </div>
+              }
+              description={
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Text strong style={{ color: themeToken.colorPrimary }}>
+                      {token.symbol}
+                    </Text>
                   </div>
-                </IonCol>
-              </IonRow>
 
-              <IonRow>
-                <IonCol size="12">
-                  <IonItem lines="none" className="token-details">
-                    <IonIcon icon={timeOutline} slot="start" color="medium" />
-                    <IonLabel>
-                      <p>Created: {formatDate(token.creationTime)}</p>
-                    </IonLabel>
-                  </IonItem>
-                </IonCol>
-              </IonRow>
+                  <Divider className="my-2" />
 
-              <IonRow>
-                <IonCol size="12">
-                  <IonItem lines="none" className="mint-address">
-                    <IonLabel>
-                      <p>
-                        Mint: {token.mintAddress.slice(0, 8)}...
-                        {token.mintAddress.slice(-8)}
-                      </p>
-                    </IonLabel>
-                    <IonButton
-                      fill="clear"
-                      size="small"
-                      slot="end"
-                      onClick={() => copyToClipboard(token.mintAddress)}
-                    >
-                      <IonIcon icon={copyOutline} />
-                    </IonButton>
-                  </IonItem>
-                </IonCol>
-              </IonRow>
-
-              <IonRow>
-                <IonCol size="12">
-                  <div className="token-actions">
-                    <IonButton
-                      fill="outline"
-                      size="small"
-                      onClick={() => openInPumpFun(token.mintAddress)}
-                    >
-                      <IonIcon icon={linkOutline} slot="start" />
-                      Pump.fun
-                    </IonButton>
-
-                    <IonButton
-                      fill="outline"
-                      size="small"
-                      onClick={() => openInSolscan(token.mintAddress)}
-                    >
-                      <IonIcon icon={openOutline} slot="start" />
-                      Solscan
-                    </IonButton>
+                  <div className="flex items-center">
+                    <IonIcon icon={timeOutline} className="mr-1" />
+                    <Text type="secondary" className="text-xs">
+                      Created: {formatDate(token.creationTime)}
+                    </Text>
                   </div>
-                </IonCol>
-              </IonRow>
-            </IonGrid>
-          </IonCardContent>
-        </IonCard>
-      ))}
-    </>
+
+                  <div
+                    className="rounded p-2 font-mono text-xs"
+                    style={{
+                      backgroundColor: themeToken.colorFillQuaternary,
+                      color: themeToken.colorTextSecondary,
+                    }}
+                  >
+                    {token.mintAddress.slice(0, 8)}...
+                    {token.mintAddress.slice(-8)}
+                  </div>
+                </div>
+              }
+            />
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 };
 
