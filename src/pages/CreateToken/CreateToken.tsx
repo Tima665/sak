@@ -1,4 +1,5 @@
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { AnchorProvider } from '@coral-xyz/anchor';
 import {
   IonContent,
   IonHeader,
@@ -14,9 +15,12 @@ import {
   IonActionSheet,
   IonText,
 } from '@ionic/react';
+import { usePrivy } from '@privy-io/react-auth';
+import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Upload } from 'antd';
 import type { UploadFileStatus } from 'antd/es/upload/interface';
 import { camera, image, add } from 'ionicons/icons';
+import { PumpFunSDK } from 'pumpdotfun-sdk';
 import { useState } from 'react';
 
 import { usePhotoGallery } from '../../hooks/usePhotoGallery';
@@ -27,6 +31,8 @@ export const CreateToken: React.FC = () => {
   const [tokenName, setTokenName] = useState('');
   const [tokenDescription, setTokenDescription] = useState('');
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = usePrivy();
 
   const { photos, takePhoto, deletePhoto } = usePhotoGallery();
 
@@ -37,13 +43,60 @@ export const CreateToken: React.FC = () => {
     url: photo.webviewPath,
   }));
 
-  const handleCreateToken = () => {
-    // Here you would implement the token creation logic
-    console.log({
-      name: tokenName,
-      description: tokenDescription,
-      image: photos?.[0]?.webviewPath,
-    });
+  const handleCreateToken = async () => {
+    try {
+      setIsLoading(true);
+
+      if (!user?.wallet) {
+        throw new Error('Wallet not connected');
+      }
+
+      const connection = new Connection(import.meta.env.VITE_HELIUS_RPC_URL);
+      const provider = new AnchorProvider(connection, user.wallet as any, {});
+      const sdk = new PumpFunSDK(provider);
+
+      console.log(new Blob([photos?.[0]?.webviewPath || '']));
+
+      // Генерируем новый Keypair для создателя токена
+      const creator = Keypair.generate();
+      const mint = Keypair.generate();
+
+      console.log('Creator pubkey:', creator.publicKey.toBase58());
+
+      const tokenMetadata = {
+        name: tokenName,
+        symbol: tokenName.substring(0, 4).toUpperCase(),
+        description: tokenDescription,
+        file: new Blob([photos?.[0]?.webviewPath || ''], { type: 'image/png' }),
+      };
+
+      const createResults = await sdk.createAndBuy(
+        creator,
+        mint,
+        tokenMetadata,
+        BigInt(0.0001 * LAMPORTS_PER_SOL),
+        100n, // slippage basis points
+        {
+          unitLimit: 250000,
+          unitPrice: 250000,
+        },
+      );
+
+      console.log({ createResults });
+
+      if (createResults.success) {
+        console.log(
+          'Token created successfully:',
+          `https://pump.fun/${mint.publicKey.toBase58()}`,
+        );
+      } else {
+        throw new Error('Failed to create token');
+      }
+    } catch (error) {
+      console.error('Error creating token:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const selectFromGallery = async () => {
@@ -116,8 +169,9 @@ export const CreateToken: React.FC = () => {
             expand="block"
             onClick={handleCreateToken}
             className="ion-margin-top"
+            disabled={isLoading || !user?.wallet}
           >
-            Create Token
+            {isLoading ? 'Creating...' : 'Create Token'}
           </IonButton>
         </div>
 

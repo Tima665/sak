@@ -8,6 +8,17 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), legacy()],
+  resolve: {
+    alias: {
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      buffer: 'buffer',
+      process: 'process/browser',
+    },
+  },
+  define: {
+    global: 'globalThis',
+  },
   build: {
     target: 'esnext',
     rollupOptions: {
