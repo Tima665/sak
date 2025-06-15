@@ -21,7 +21,7 @@ import type { UploadFileStatus } from 'antd/es/upload/interface';
 import { camera, image, add } from 'ionicons/icons';
 import { useState } from 'react';
 
-import { WalletBalance } from '../../components';
+// import { WalletBalance } from '../../components';
 import { useCreateTokenWithPrivyHybrid } from '../../hooks/useCreateTokenWithPrivyHybrid';
 import { usePhotoGallery } from '../../hooks/usePhotoGallery';
 import { usePrivyWallet } from '../../hooks/usePrivyWallet';
@@ -179,7 +179,7 @@ export const CreateToken: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Create Token</IonTitle>
+          <IonTitle className="p-4">Create Token</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
@@ -197,12 +197,12 @@ export const CreateToken: React.FC = () => {
         )}
 
         {/* Wallet Balance Section */}
-        {walletAddress && (
+        {/* {walletAddress && (
           <WalletBalance
             publicKey={walletAddress}
             title="Your Wallet Balance"
           />
-        )}
+        )} */}
 
         <div>
           <div
