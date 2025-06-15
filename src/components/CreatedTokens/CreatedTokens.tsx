@@ -43,6 +43,8 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
     refetch,
   } = useCreatedTokens(walletAddress);
 
+  console.log('tokens', tokens);
+
   const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
     await refetch();
     event.detail.complete();

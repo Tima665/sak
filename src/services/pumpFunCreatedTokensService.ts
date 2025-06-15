@@ -37,99 +37,18 @@ export interface BitqueryResponse {
 }
 
 class PumpFunCreatedTokensService {
-  private readonly BITQUERY_API_URL = 'https://graphql.bitquery.io';
-  private readonly BITQUERY_API_KEY = 'BQYhJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ'; // Нужно получить API ключ
-
-  async getCreatedTokensByWallet(
-    walletAddress: string,
-  ): Promise<CreatedToken[]> {
-    const query = `
-      query GetCreatedTokens($creator: String!) {
-        Solana {
-          TokenSupplyUpdates(
-            where: {
-              Transaction: {
-                Result: { Success: true }
-                Signer: { is: $creator }
-              }
-              Instruction: {
-                Program: {
-                  Address: { is: "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P" }
-                  Method: { is: "create" }
-                }
-              }
-            }
-            orderBy: { descending: Block_Time }
-            limit: { count: 50 }
-          ) {
-            Block {
-              Time
-            }
-            Transaction {
-              Signer
-              Signature
-            }
-            TokenSupplyUpdate {
-              Amount
-              Currency {
-                Symbol
-                Name
-                MintAddress
-                Uri
-                Decimals
-              }
-              PostBalance
-            }
-          }
-        }
-      }
-    `;
-
-    try {
-      const response = await fetch(this.BITQUERY_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.BITQUERY_API_KEY}`,
-        },
-        body: JSON.stringify({
-          query,
-          variables: {
-            creator: walletAddress,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Bitquery API error: ${response.status}`);
-      }
-
-      const data: BitqueryResponse = await response.json();
-
-      return data.data.Solana.TokenSupplyUpdates.map((update) => ({
-        name: update.TokenSupplyUpdate.Currency.Name || 'Unknown',
-        symbol: update.TokenSupplyUpdate.Currency.Symbol || 'UNKNOWN',
-        mintAddress: update.TokenSupplyUpdate.Currency.MintAddress,
-        creationTime: update.Block.Time,
-        signature: update.Transaction.Signature,
-        uri: update.TokenSupplyUpdate.Currency.Uri,
-      }));
-    } catch (error) {
-      console.error('Error fetching created tokens:', error);
-      throw error;
-    }
-  }
-
-  // Альтернативный метод через Helius API
   async getCreatedTokensByWalletHelius(
     walletAddress: string,
   ): Promise<CreatedToken[]> {
-    const HELIUS_API_KEY = 'b5223b85-b513-4fe8-b215-7b8461b51582';
-    const HELIUS_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+    const HELIUS_RPC_URL = import.meta.env.VITE_HELIUS_RPC_URL;
+
+    if (!HELIUS_RPC_URL) {
+      throw new Error('VITE_HELIUS_RPC_URL is not configured');
+    }
 
     try {
       // Получаем транзакции создания токенов
-      const response = await fetch(HELIUS_URL, {
+      const response = await fetch(HELIUS_RPC_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +79,7 @@ class PumpFunCreatedTokensService {
       for (const sig of signatures.slice(0, 20)) {
         // Ограничиваем для производительности
         try {
-          const txResponse = await fetch(HELIUS_URL, {
+          const txResponse = await fetch(HELIUS_RPC_URL, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -256,11 +175,15 @@ class PumpFunCreatedTokensService {
   private async getTokenMetadata(
     mintAddress: string,
   ): Promise<{ name?: string; symbol?: string; uri?: string }> {
-    const HELIUS_API_KEY = 'b5223b85-b513-4fe8-b215-7b8461b51582';
-    const HELIUS_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+    const HELIUS_RPC_URL = import.meta.env.VITE_HELIUS_RPC_URL;
+
+    if (!HELIUS_RPC_URL) {
+      console.error('VITE_HELIUS_RPC_URL is not configured');
+      return {};
+    }
 
     try {
-      const response = await fetch(HELIUS_URL, {
+      const response = await fetch(HELIUS_RPC_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -290,38 +213,6 @@ class PumpFunCreatedTokensService {
   }
 
   // Простой метод для тестирования с известными данными
-  async getMockCreatedTokens(walletAddress: string): Promise<CreatedToken[]> {
-    // Возвращаем моковые данные для тестирования
-    if (walletAddress === 'BFuhXnVC2UJkK3d9JRunqbqzzJ3f5G14LGSDMJ3RxsRU') {
-      return [
-        {
-          name: 'OILMOON',
-          symbol: 'OILMOON',
-          mintAddress: 'mock-mint-1',
-          creationTime: '2024-01-15T10:30:00Z',
-          signature: 'mock-signature-1',
-          marketCap: 4200,
-        },
-        {
-          name: 'OILMOON',
-          symbol: 'OILMOON',
-          creationTime: '2024-01-14T15:45:00Z',
-          mintAddress: 'mock-mint-2',
-          signature: 'mock-signature-2',
-          marketCap: 4200,
-        },
-        {
-          name: 'tn12',
-          symbol: 'tn12',
-          mintAddress: 'mock-mint-3',
-          creationTime: '2024-01-13T08:20:00Z',
-          signature: 'mock-signature-3',
-          marketCap: 4200,
-        },
-      ];
-    }
-    return [];
-  }
 }
 
 export const pumpFunCreatedTokensService = new PumpFunCreatedTokensService();
