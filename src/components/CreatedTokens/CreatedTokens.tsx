@@ -17,6 +17,7 @@ import {
   IonCol,
   RefresherEventDetail,
 } from '@ionic/react';
+import { formatDistanceToNow, format, isValid, parseISO } from 'date-fns';
 import {
   copyOutline,
   openOutline,
@@ -65,21 +66,30 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
+    try {
+      const date = parseISO(dateString);
 
-    if (diffHours < 1) {
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      return `${diffMinutes}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else if (diffDays < 30) {
-      return `${diffDays}d ago`;
-    } else {
-      return date.toLocaleDateString();
+      if (!isValid(date)) {
+        return 'Invalid date';
+      }
+
+      // Use formatDistanceToNow for relative time
+      const distance = formatDistanceToNow(date, {
+        addSuffix: true,
+      });
+
+      // If more than 30 days passed, show full date
+      const daysDiff = Math.floor(
+        (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      if (daysDiff > 30) {
+        return format(date, 'MM/dd/yyyy');
+      }
+
+      return distance;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
     }
   };
 
@@ -98,7 +108,7 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
       <IonCard>
         <IonCardContent>
           <IonText color="medium">
-            <p>Подключите кошелек для просмотра созданных токенов</p>
+            <p>Connect wallet to view created tokens</p>
           </IonText>
         </IonCardContent>
       </IonCard>
@@ -111,7 +121,7 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
         <IonCardContent className="ion-text-center">
           <IonSpinner name="crescent" />
           <IonText color="medium">
-            <p>Загружаем созданные токены...</p>
+            <p>Loading created tokens...</p>
           </IonText>
         </IonCardContent>
       </IonCard>
@@ -123,11 +133,11 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
       <IonCard>
         <IonCardContent>
           <IonText color="danger">
-            <p>Ошибка загрузки созданных токенов</p>
+            <p>Error loading created tokens</p>
             <p>{error.message}</p>
           </IonText>
           <IonButton fill="clear" onClick={() => refetch()}>
-            Попробовать снова
+            Try again
           </IonButton>
         </IonCardContent>
       </IonCard>
@@ -143,8 +153,8 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
         <IonCard>
           <IonCardContent>
             <IonText color="medium">
-              <p>Созданные токены не найдены</p>
-              <p>Создайте свой первый токен на вкладке "Создать"!</p>
+              <p>No created tokens found</p>
+              <p>Create your first token on the "Create" tab!</p>
             </IonText>
           </IonCardContent>
         </IonCard>
@@ -162,7 +172,7 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
         <IonCardHeader>
           <IonCardTitle>
             <IonIcon icon={trophyOutline} style={{ marginRight: '8px' }} />
-            Созданные токены ({tokens.length})
+            Created Tokens ({tokens.length})
           </IonCardTitle>
         </IonCardHeader>
       </IonCard>
@@ -199,7 +209,7 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
                   <IonItem lines="none" className="token-details">
                     <IonIcon icon={timeOutline} slot="start" color="medium" />
                     <IonLabel>
-                      <p>Создан: {formatDate(token.creationTime)}</p>
+                      <p>Created: {formatDate(token.creationTime)}</p>
                     </IonLabel>
                   </IonItem>
                 </IonCol>

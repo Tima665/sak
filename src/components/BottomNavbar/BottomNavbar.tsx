@@ -16,7 +16,7 @@ export const BottomNavbar = () => {
       </IonTabButton>
       <IonTabButton tab="tab3" href="/tab3">
         <IonIcon aria-hidden="true" icon={trophyOutline} />
-        <IonLabel>Мои токены</IonLabel>
+        <IonLabel>My Tokens</IonLabel>
       </IonTabButton>
     </IonTabBar>
   );

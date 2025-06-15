@@ -17,13 +17,13 @@ const Tab3: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Мои токены</IonTitle>
+          <IonTitle>My Tokens</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">Мои токены</IonTitle>
+            <IonTitle size="large">My Tokens</IonTitle>
           </IonToolbar>
         </IonHeader>
         <CreatedTokens walletAddress={walletAddress || null} />
