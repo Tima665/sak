@@ -7,6 +7,7 @@ export interface CreatedToken {
   marketCap?: number;
   price?: number;
   uri?: string;
+  image?: string;
 }
 
 export interface BitqueryResponse {
@@ -127,6 +128,7 @@ class PumpFunCreatedTokensService {
                 ).toISOString(),
                 signature: sig.signature,
                 uri: tokenInfo.uri,
+                image: tokenInfo.image,
               });
             }
           }
@@ -174,7 +176,7 @@ class PumpFunCreatedTokensService {
 
   private async getTokenMetadata(
     mintAddress: string,
-  ): Promise<{ name?: string; symbol?: string; uri?: string }> {
+  ): Promise<{ name?: string; symbol?: string; uri?: string; image?: string }> {
     const HELIUS_RPC_URL = import.meta.env.VITE_HELIUS_RPC_URL;
 
     if (!HELIUS_RPC_URL) {
@@ -201,18 +203,31 @@ class PumpFunCreatedTokensService {
       const data = await response.json();
       const asset = data.result;
 
+      let imageUrl =
+        asset?.content?.links?.image || asset?.content?.files?.[0]?.uri;
+
+      // Если есть JSON URI, попробуем получить изображение оттуда
+      if (!imageUrl && asset?.content?.json_uri) {
+        try {
+          const metadataResponse = await fetch(asset.content.json_uri);
+          const metadata = await metadataResponse.json();
+          imageUrl = metadata.image;
+        } catch (error) {
+          console.error('Error fetching metadata from JSON URI:', error);
+        }
+      }
+
       return {
         name: asset?.content?.metadata?.name,
         symbol: asset?.content?.metadata?.symbol,
         uri: asset?.content?.json_uri,
+        image: imageUrl,
       };
     } catch (error) {
       console.error('Error fetching token metadata:', error);
       return {};
     }
   }
-
-  // Простой метод для тестирования с известными данными
 }
 
 export const pumpFunCreatedTokensService = new PumpFunCreatedTokensService();

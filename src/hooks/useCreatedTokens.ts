@@ -16,15 +16,9 @@ export const useCreatedTokens = (
         return [];
       }
 
-      // Сначала пробуем Helius API
-      try {
-        return await pumpFunCreatedTokensService.getCreatedTokensByWalletHelius(
-          walletAddress,
-        );
-      } catch (error) {
-        console.error('Helius API failed:', error);
-        throw error;
-      }
+      return await pumpFunCreatedTokensService.getCreatedTokensByWalletHelius(
+        walletAddress,
+      );
     },
     enabled: enabled && !!walletAddress,
     staleTime: 5 * 60 * 1000, // 5 минут

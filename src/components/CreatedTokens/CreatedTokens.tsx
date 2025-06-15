@@ -15,6 +15,8 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonImg,
+  IonAvatar,
   RefresherEventDetail,
 } from '@ionic/react';
 import { formatDistanceToNow, format, isValid, parseISO } from 'date-fns';
@@ -24,6 +26,7 @@ import {
   timeOutline,
   trophyOutline,
   linkOutline,
+  logoUsd,
 } from 'ionicons/icons';
 import React from 'react';
 
@@ -189,11 +192,32 @@ const CreatedTokens: React.FC<CreatedTokensProps> = ({ walletAddress }) => {
               <IonRow>
                 <IonCol size="12">
                   <div className="token-header">
-                    <div className="token-info">
-                      <h3 className="token-name">{token.name}</h3>
-                      <IonChip color="primary" outline>
-                        {token.symbol}
-                      </IonChip>
+                    <div className="token-info-with-image">
+                      <IonAvatar className="token-avatar">
+                        {token.image ? (
+                          <IonImg
+                            src={token.image}
+                            alt={token.name}
+                            onIonError={(e) => {
+                              // Show fallback icon if image fails to load
+                              const target = e.target as HTMLIonImgElement;
+                              const avatar = target.closest('.token-avatar');
+                              if (avatar) {
+                                avatar.innerHTML =
+                                  '<ion-icon name="logo-usd"></ion-icon>';
+                              }
+                            }}
+                          />
+                        ) : (
+                          <IonIcon icon={logoUsd} className="fallback-icon" />
+                        )}
+                      </IonAvatar>
+                      <div className="token-info">
+                        <h3 className="token-name">{token.name}</h3>
+                        <IonChip color="primary" outline>
+                          {token.symbol}
+                        </IonChip>
+                      </div>
                     </div>
                     {token.marketCap && (
                       <div className="market-cap">
