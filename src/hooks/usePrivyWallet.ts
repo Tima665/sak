@@ -1,4 +1,5 @@
 import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
+import { useSendTransaction } from '@privy-io/react-auth/solana';
 import {
   Connection,
   Transaction,
@@ -27,12 +28,13 @@ export interface PrivySendSolParams {
 }
 
 export interface PrivySendSolResult {
-  signature: string;
+  signature: string | any;
 }
 
 export const usePrivyWallet = () => {
   const { ready, authenticated, user } = usePrivy();
   const { wallets } = useSolanaWallets();
+  const { sendTransaction: privySendTransaction } = useSendTransaction();
 
   // Get the first Solana wallet (embedded or connected)
   const solanaWallet = wallets.length > 0 ? wallets[0] : null;
@@ -139,21 +141,22 @@ export const usePrivyWallet = () => {
           }),
         );
 
-        console.log('Transaction created, sending via Privy wallet...');
+        console.log('Transaction created, sending via Privy without UI...');
 
-        // Use wallet.sendTransaction directly as per Privy docs
-        const signature = await solanaWallet.sendTransaction!(
+        // Use Privy's sendTransaction hook with disabled UI
+        const result = await privySendTransaction({
           transaction,
           connection,
-        );
+          uiOptions: {
+            showWalletUIs: false,
+          },
+        });
 
-        console.log('Transaction sent successfully:', signature);
+        console.log('Transaction sent successfully:', result);
 
         return {
           signature:
-            typeof signature === 'string'
-              ? signature
-              : (signature as any)?.signature || signature,
+            typeof result === 'string' ? result : result?.signature || result,
         };
       } catch (error) {
         console.error('SOL transfer failed:', error);

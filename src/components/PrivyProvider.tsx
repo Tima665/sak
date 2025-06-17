@@ -21,6 +21,7 @@ export const PrivyProvider: React.FC<PropsWithChildren> = ({ children }) => {
           solana: {
             createOnLogin: 'users-without-wallets',
           },
+          showWalletUIs: false,
         },
       }}
     >
