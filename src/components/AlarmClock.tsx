@@ -83,6 +83,12 @@ const AlarmClock: React.FC = () => {
 
   const initializeNotifications = async () => {
     try {
+      // Check if we're running on a supported platform
+      if (import.meta.env.VITE_PLATFORM === 'web') {
+        console.log('Уведомления недоступны в веб-версии');
+        return;
+      }
+
       const permission = await LocalNotifications.checkPermissions();
       if (permission.display !== 'granted') {
         await LocalNotifications.requestPermissions();
@@ -106,7 +112,22 @@ const AlarmClock: React.FC = () => {
   useEffect(() => {
     const savedAlarms = localStorage.getItem('alarms');
     if (savedAlarms) {
-      setAlarms(JSON.parse(savedAlarms));
+      try {
+        const parsedAlarms = JSON.parse(savedAlarms);
+        // Ensure all alarms have required fields with defaults
+        const normalizedAlarms = parsedAlarms.map((alarm: any) => ({
+          id: alarm.id || Math.floor(Math.random() * 1000000),
+          time: alarm.time || new Date().toISOString(),
+          label: alarm.label || 'Будильник',
+          enabled: alarm.enabled !== undefined ? alarm.enabled : true,
+          days: Array.isArray(alarm.days) ? alarm.days : [],
+          vibrate: alarm.vibrate !== undefined ? alarm.vibrate : true,
+        }));
+        setAlarms(normalizedAlarms);
+      } catch (error) {
+        console.error('Ошибка загрузки будильников:', error);
+        setAlarms([]);
+      }
     }
     initializeNotifications();
   }, []);
@@ -118,6 +139,12 @@ const AlarmClock: React.FC = () => {
 
   const scheduleAlarmNotification = async (alarm: AlarmItem) => {
     try {
+      // Skip notifications on web platform
+      if (import.meta.env.VITE_PLATFORM === 'web') {
+        console.log('Планирование уведомлений недоступно в веб-версии');
+        return;
+      }
+
       const alarmTime = new Date(alarm.time);
       const now = new Date();
 
@@ -165,6 +192,12 @@ const AlarmClock: React.FC = () => {
 
   const cancelAlarmNotification = async (alarmId: number) => {
     try {
+      // Skip notifications on web platform
+      if (import.meta.env.VITE_PLATFORM === 'web') {
+        console.log('Отмена уведомлений недоступна в веб-версии');
+        return;
+      }
+
       await LocalNotifications.cancel({
         notifications: [{ id: alarmId }],
       });
@@ -190,23 +223,32 @@ const AlarmClock: React.FC = () => {
 
       setCurrentRingingAlarm(testAlarm);
 
-      if (testAlarm.vibrate) {
-        await Haptics.impact({ style: ImpactStyle.Heavy });
+      if (testAlarm.vibrate && import.meta.env.VITE_PLATFORM !== 'web') {
+        try {
+          await Haptics.impact({ style: ImpactStyle.Heavy });
+        } catch {
+          console.log('Вибрация недоступна в веб-версии');
+        }
       }
 
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            title: '🔔 Тестовый будильник',
-            body: 'Это тест будильника. Нажмите, чтобы выключить.',
-            id: 999999,
-            schedule: { at: new Date(Date.now() + 1000) },
-            sound: 'alarm_classic.wav',
-            channelId: 'alarm-channel',
-            extra: { isTest: true },
-          },
-        ],
-      });
+      if (import.meta.env.VITE_PLATFORM !== 'web') {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: '🔔 Тестовый будильник',
+              body: 'Это тест будильника. Нажмите, чтобы выключить.',
+              id: 999999,
+              schedule: { at: new Date(Date.now() + 1000) },
+              sound: 'alarm_classic.wav',
+              channelId: 'alarm-channel',
+              extra: { isTest: true },
+            },
+          ],
+        });
+      } else {
+        // Web fallback - just show the alarm modal
+        console.log('Тестовый будильник запущен в веб-версии');
+      }
     } catch (error) {
       console.error('Ошибка тестирования будильника:', error);
     }
@@ -235,18 +277,22 @@ const AlarmClock: React.FC = () => {
 
       const snoozeTime = new Date(Date.now() + 5 * 60 * 1000);
 
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            title: `Будильник (Отложен ${snoozeCount + 1} раз)`,
-            body: currentRingingAlarm.label || 'Время просыпаться!',
-            id: currentRingingAlarm.id + 10000,
-            schedule: { at: snoozeTime },
-            sound: 'alarm_classic.wav',
-            channelId: 'alarm-channel',
-          },
-        ],
-      });
+      if (import.meta.env.VITE_PLATFORM !== 'web') {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: `Будильник (Отложен ${snoozeCount + 1} раз)`,
+              body: currentRingingAlarm.label || 'Время просыпаться!',
+              id: currentRingingAlarm.id + 10000,
+              schedule: { at: snoozeTime },
+              sound: 'alarm_classic.wav',
+              channelId: 'alarm-channel',
+            },
+          ],
+        });
+      } else {
+        console.log(`Будильник отложен на 5 минут в веб-версии`);
+      }
 
       setCurrentRingingAlarm(null);
     } catch (error) {
@@ -350,11 +396,12 @@ const AlarmClock: React.FC = () => {
     });
   };
 
-  const formatDays = (days: string[]) => {
-    if (days.length === 0) return 'Один раз';
+  const formatDays = (days: string[] | undefined) => {
+    if (!days || days.length === 0) return 'Один раз';
     if (days.length === 7) return 'Каждый день';
     return days
       .map((day) => DAYS_OF_WEEK.find((d) => d.key === day)?.label)
+      .filter(Boolean)
       .join(', ');
   };
 
@@ -363,45 +410,54 @@ const AlarmClock: React.FC = () => {
       {/* Alarm Ringing Modal */}
       <IonModal isOpen={isAlarmRinging} backdropDismiss={false}>
         <IonContent className="ion-padding">
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <IonIcon
-              icon={alarm}
-              className="mb-8 animate-pulse text-8xl text-red-500"
-            />
-            <IonText>
-              <h1 className="mb-4 text-3xl font-bold">БУДИЛЬНИК</h1>
-              <h2 className="mb-2 text-xl">
-                {currentRingingAlarm?.label || 'Время просыпаться!'}
-              </h2>
-              <p className="mb-8 text-lg text-gray-600">
-                {currentRingingAlarm && formatTime(currentRingingAlarm.time)}
-              </p>
-              {snoozeCount > 0 && (
-                <p className="mb-4 text-sm text-orange-500">
-                  Отложен {snoozeCount} раз
+          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-b from-red-50 to-red-100 text-center">
+            <div className="mx-4 w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl">
+              <IonIcon
+                icon={alarm}
+                className="mb-6 animate-bounce text-6xl text-red-500"
+              />
+              <IonText>
+                <h1 className="mb-4 text-2xl font-bold text-gray-800">
+                  🔔 БУДИЛЬНИК
+                </h1>
+                <h2 className="mb-3 text-lg font-semibold text-gray-700">
+                  {currentRingingAlarm?.label || 'Время просыпаться!'}
+                </h2>
+                <p className="mb-6 text-3xl font-bold text-red-600">
+                  {currentRingingAlarm && formatTime(currentRingingAlarm.time)}
                 </p>
-              )}
-            </IonText>
+                {snoozeCount > 0 && (
+                  <p className="mb-4 rounded-full bg-orange-50 px-3 py-1 text-sm text-orange-600">
+                    Отложен {snoozeCount} раз
+                  </p>
+                )}
+                {authenticated && snoozeWalletAddress && (
+                  <p className="mb-4 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-600">
+                    💸 При отложении будет отправлено 0.001 SOL
+                  </p>
+                )}
+              </IonText>
 
-            <div className="flex w-full max-w-md gap-4">
-              <IonButton
-                expand="block"
-                fill="outline"
-                color="warning"
-                onClick={snoozeAlarm}
-                className="flex-1"
-                disabled={isSendingSol}
-              >
-                {isSendingSol ? 'Отправка...' : 'Отложить (5 мин)'}
-              </IonButton>
-              <IonButton
-                expand="block"
-                color="danger"
-                onClick={dismissAlarm}
-                className="flex-1"
-              >
-                Выключить
-              </IonButton>
+              <div className="mt-6 flex w-full gap-3">
+                <IonButton
+                  expand="block"
+                  fill="outline"
+                  color="warning"
+                  onClick={snoozeAlarm}
+                  className="flex-1 rounded-xl"
+                  disabled={isSendingSol}
+                >
+                  {isSendingSol ? '⏳ Отправка...' : '😴 Отложить'}
+                </IonButton>
+                <IonButton
+                  expand="block"
+                  color="danger"
+                  onClick={dismissAlarm}
+                  className="flex-1 rounded-xl"
+                >
+                  ❌ Выключить
+                </IonButton>
+              </div>
             </div>
           </div>
         </IonContent>
@@ -409,74 +465,110 @@ const AlarmClock: React.FC = () => {
 
       {/* Add/Edit Alarm Modal */}
       <IonModal isOpen={isModalOpen} onDidDismiss={() => setIsModalOpen(false)}>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>
-              {editingAlarm ? 'Редактировать' : 'Новый будильник'}
+        <IonHeader className="bg-gradient-to-r from-blue-500 to-purple-600">
+          <IonToolbar color="clear">
+            <IonTitle className="font-bold text-white">
+              {editingAlarm ? '✏️ Редактировать' : '➕ Новый будильник'}
             </IonTitle>
             <IonButtons slot="end">
-              <IonButton onClick={() => setIsModalOpen(false)}>
+              <IonButton onClick={() => setIsModalOpen(false)} color="light">
                 <IonIcon icon={close} />
               </IonButton>
             </IonButtons>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding">
-          <IonItem>
-            <IonLabel position="stacked">Время</IonLabel>
-            <IonDatetime
-              presentation="time"
-              value={selectedTime}
-              onIonChange={(e) => setSelectedTime(e.detail.value as string)}
-              locale="ru-RU"
-              hourCycle="h23"
-            />
-          </IonItem>
-
-          <IonItem>
-            <IonLabel position="stacked">Название</IonLabel>
-            <IonInput
-              value={alarmLabel}
-              onIonInput={(e) => setAlarmLabel(e.detail.value!)}
-              placeholder="Введите название будильника"
-            />
-          </IonItem>
-
-          <IonItem>
-            <IonLabel position="stacked">Дни недели</IonLabel>
-          </IonItem>
-          <IonGrid>
-            <IonRow>
-              {DAYS_OF_WEEK.map((day) => (
-                <IonCol size="auto" key={day.key}>
-                  <IonButton
-                    fill={selectedDays.includes(day.key) ? 'solid' : 'outline'}
-                    size="small"
-                    onClick={() => toggleDay(day.key)}
+        <IonContent className="ion-padding bg-gray-50">
+          <div className="space-y-4">
+            <IonCard className="rounded-2xl border-0 shadow-lg">
+              <IonCardContent className="p-6">
+                <IonItem lines="none" className="mb-4">
+                  <IonLabel
+                    position="stacked"
+                    className="text-lg font-semibold text-gray-700"
                   >
-                    {day.label}
-                  </IonButton>
-                </IonCol>
-              ))}
-            </IonRow>
-          </IonGrid>
+                    🕐 Время
+                  </IonLabel>
+                  <IonDatetime
+                    presentation="time"
+                    value={selectedTime}
+                    onIonChange={(e) =>
+                      setSelectedTime(e.detail.value as string)
+                    }
+                    locale="ru-RU"
+                    hourCycle="h23"
+                    className="mt-2"
+                  />
+                </IonItem>
 
-          <IonItem>
-            <IonLabel>Вибрация</IonLabel>
-            <IonToggle
-              checked={vibrateEnabled}
-              onIonChange={(e) => setVibrateEnabled(e.detail.checked)}
-            />
-          </IonItem>
+                <IonItem lines="none" className="mb-4">
+                  <IonLabel
+                    position="stacked"
+                    className="text-lg font-semibold text-gray-700"
+                  >
+                    📝 Название
+                  </IonLabel>
+                  <IonInput
+                    value={alarmLabel}
+                    onIonInput={(e) => setAlarmLabel(e.detail.value!)}
+                    placeholder="Введите название будильника"
+                    className="mt-2 rounded-lg bg-gray-100"
+                  />
+                </IonItem>
 
-          <IonButton
-            expand="block"
-            onClick={saveAlarm}
-            className="ion-margin-top"
-          >
-            <IonIcon icon={checkmark} slot="start" />
-            {editingAlarm ? 'Сохранить' : 'Создать'}
-          </IonButton>
+                <div className="mb-4">
+                  <IonLabel className="mb-3 block text-lg font-semibold text-gray-700">
+                    📅 Дни недели
+                  </IonLabel>
+                  <IonGrid>
+                    <IonRow>
+                      {DAYS_OF_WEEK.map((day) => (
+                        <IonCol size="auto" key={day.key}>
+                          <IonButton
+                            fill={
+                              selectedDays.includes(day.key)
+                                ? 'solid'
+                                : 'outline'
+                            }
+                            size="small"
+                            onClick={() => toggleDay(day.key)}
+                            className="rounded-full"
+                            color={
+                              selectedDays.includes(day.key)
+                                ? 'primary'
+                                : 'medium'
+                            }
+                          >
+                            {day.label}
+                          </IonButton>
+                        </IonCol>
+                      ))}
+                    </IonRow>
+                  </IonGrid>
+                </div>
+
+                <IonItem lines="none">
+                  <IonLabel className="text-lg font-semibold text-gray-700">
+                    📳 Вибрация
+                  </IonLabel>
+                  <IonToggle
+                    checked={vibrateEnabled}
+                    onIonChange={(e) => setVibrateEnabled(e.detail.checked)}
+                    color="success"
+                  />
+                </IonItem>
+              </IonCardContent>
+            </IonCard>
+
+            <IonButton
+              expand="block"
+              onClick={saveAlarm}
+              className="rounded-2xl text-lg font-bold"
+              size="large"
+            >
+              <IonIcon icon={checkmark} slot="start" />
+              {editingAlarm ? '💾 Сохранить' : '✨ Создать'}
+            </IonButton>
+          </div>
         </IonContent>
       </IonModal>
 
@@ -484,7 +576,7 @@ const AlarmClock: React.FC = () => {
       <IonAlert
         isOpen={showDeleteAlert}
         onDidDismiss={() => setShowDeleteAlert(false)}
-        header="Удалить будильник"
+        header="🗑️ Удалить будильник"
         message="Вы действительно хотите удалить этот будильник?"
         buttons={[
           {
@@ -504,44 +596,62 @@ const AlarmClock: React.FC = () => {
       />
 
       {/* Main Content */}
-      <div className="p-4">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 p-4">
+        {/* Header */}
+        <div className="mb-6 text-center">
+          <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent">
+            ⏰ Умный будильник
+          </h1>
+          <p className="mt-2 text-gray-600">С интеграцией Solana</p>
+        </div>
+
         {/* Test Section */}
-        <IonCard>
+        <IonCard className="mb-4 rounded-2xl border-0 bg-gradient-to-r from-green-400 to-blue-500 shadow-lg">
           <IonCardHeader>
-            <IonCardTitle>Тест будильника</IonCardTitle>
+            <IonCardTitle className="text-xl font-bold text-white">
+              🧪 Тест будильника
+            </IonCardTitle>
           </IonCardHeader>
-          <IonCardContent>
-            <IonItem>
-              <IonLabel>Вибрация</IonLabel>
+          <IonCardContent className="rounded-b-2xl bg-white">
+            <IonItem lines="none" className="mb-3">
+              <IonLabel className="text-lg font-semibold text-gray-700">
+                📳 Вибрация
+              </IonLabel>
               <IonToggle
                 checked={vibrateEnabled}
                 onIonChange={(e) => setVibrateEnabled(e.detail.checked)}
+                color="success"
               />
             </IonItem>
             <IonButton
               expand="block"
               onClick={testAlarmRing}
-              className="ion-margin-top"
+              className="rounded-xl text-lg font-bold"
               disabled={isAlarmRinging}
+              size="large"
             >
               <IonIcon icon={play} slot="start" />
-              Тестировать
+              🚀 Тестировать
             </IonButton>
           </IonCardContent>
         </IonCard>
 
         {/* SOL Transfer Test Section */}
-        <IonCard>
+        <IonCard className="mb-4 rounded-2xl border-0 bg-gradient-to-r from-purple-400 to-pink-500 shadow-lg">
           <IonCardHeader>
-            <IonCardTitle>Тест отправки SOL</IonCardTitle>
+            <IonCardTitle className="text-xl font-bold text-white">
+              💰 Тест отправки SOL
+            </IonCardTitle>
           </IonCardHeader>
-          <IonCardContent>
+          <IonCardContent className="rounded-b-2xl bg-white">
             {authenticated && snoozeWalletAddress ? (
               <>
-                <IonItem>
+                <IonItem lines="none" className="mb-3">
                   <IonLabel>
-                    <p className="text-sm">Адрес получателя:</p>
-                    <p className="text-xs break-all text-gray-500">
+                    <h3 className="mb-1 text-sm font-semibold text-gray-700">
+                      📍 Адрес получателя:
+                    </h3>
+                    <p className="rounded-lg bg-gray-100 p-2 font-mono text-xs break-all text-gray-500">
                       {snoozeWalletAddress}
                     </p>
                   </IonLabel>
@@ -551,65 +661,90 @@ const AlarmClock: React.FC = () => {
                   onClick={() =>
                     sendSol({ toAddress: snoozeWalletAddress, amount: 0.001 })
                   }
-                  className="ion-margin-top"
+                  className="rounded-xl text-lg font-bold"
                   disabled={isSendingSol}
                   color="secondary"
+                  size="large"
                 >
                   <IonIcon icon={play} slot="start" />
-                  {isSendingSol ? 'Отправка...' : 'Отправить 0.001 SOL'}
+                  {isSendingSol ? '⏳ Отправка...' : '💸 Отправить 0.001 SOL'}
                 </IonButton>
               </>
             ) : (
-              <IonText color="medium" className="block text-center">
-                {!authenticated
-                  ? 'Войдите в аккаунт для тестирования'
-                  : 'Адрес кошелька не настроен'}
-              </IonText>
+              <div className="py-6 text-center">
+                <IonIcon icon={alarm} className="mb-3 text-4xl text-gray-400" />
+                <IonText color="medium">
+                  <p className="text-gray-500">
+                    {!authenticated
+                      ? '🔐 Войдите в аккаунт для тестирования'
+                      : '⚠️ Адрес кошелька не настроен'}
+                  </p>
+                </IonText>
+              </div>
             )}
           </IonCardContent>
         </IonCard>
 
         {/* Alarms List */}
-        <IonCard>
-          <IonCardHeader>
-            <IonCardTitle>Мои будильники</IonCardTitle>
+        <IonCard className="mb-20 rounded-2xl border-0 shadow-lg">
+          <IonCardHeader className="rounded-t-2xl bg-gradient-to-r from-indigo-500 to-blue-600">
+            <IonCardTitle className="text-xl font-bold text-white">
+              📋 Мои будильники
+            </IonCardTitle>
           </IonCardHeader>
-          <IonCardContent>
+          <IonCardContent className="p-0">
             {alarms.length === 0 ? (
-              <IonText color="medium" className="block p-8 text-center">
-                У вас пока нет будильников.
-                <br />
-                Нажмите + чтобы создать первый.
-              </IonText>
+              <div className="py-12 text-center">
+                <IonIcon icon={alarm} className="mb-4 text-6xl text-gray-300" />
+                <IonText color="medium">
+                  <h3 className="mb-2 text-lg font-semibold text-gray-500">
+                    Пока нет будильников
+                  </h3>
+                  <p className="text-gray-400">
+                    Нажмите ➕ чтобы создать первый
+                  </p>
+                </IonText>
+              </div>
             ) : (
-              <IonList>
-                {alarms.map((alarm) => (
-                  <IonItem key={alarm.id}>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-2xl font-bold">
+              <IonList className="bg-transparent">
+                {alarms.map((alarm, index) => (
+                  <IonItem
+                    key={alarm.id}
+                    className={`${index === 0 ? '' : 'border-t border-gray-100'} bg-white hover:bg-gray-50`}
+                    lines="none"
+                  >
+                    <div className="flex-1 py-2">
+                      <div className="mb-2 flex items-center justify-between">
+                        <h3 className="text-3xl font-bold text-gray-800">
                           {formatTime(alarm.time)}
                         </h3>
                         <IonToggle
                           checked={alarm.enabled}
                           onIonChange={() => toggleAlarm(alarm.id)}
+                          color="success"
                         />
                       </div>
-                      <div className="mt-1">
-                        <p className="text-sm font-medium">{alarm.label}</p>
-                        <p className="text-xs text-gray-500">
-                          {formatDays(alarm.days)}
+                      <div className="space-y-1">
+                        <p className="text-base font-medium text-gray-700">
+                          {alarm.label || '🔔 Будильник'}
+                        </p>
+                        <p className="flex items-center text-sm text-gray-500">
+                          📅 {formatDays(alarm.days)}
                         </p>
                         {alarm.vibrate && (
-                          <p className="text-xs text-gray-500">Вибрация</p>
+                          <p className="flex items-center text-sm text-purple-600">
+                            📳 Вибрация включена
+                          </p>
                         )}
                       </div>
                     </div>
-                    <div className="ml-4 flex flex-col gap-1">
+                    <div className="ml-4 flex flex-col gap-2">
                       <IonButton
                         fill="clear"
                         size="small"
                         onClick={() => openAlarmModal(alarm)}
+                        className="rounded-full"
+                        color="primary"
                       >
                         <IonIcon icon={settings} />
                       </IonButton>
@@ -621,6 +756,7 @@ const AlarmClock: React.FC = () => {
                           setAlarmToDelete(alarm.id);
                           setShowDeleteAlert(true);
                         }}
+                        className="rounded-full"
                       >
                         <IonIcon icon={trash} />
                       </IonButton>
@@ -634,8 +770,12 @@ const AlarmClock: React.FC = () => {
 
         {/* Add FAB */}
         <IonFab vertical="bottom" horizontal="end" slot="fixed">
-          <IonFabButton onClick={() => openAlarmModal()}>
-            <IonIcon icon={add} />
+          <IonFabButton
+            onClick={() => openAlarmModal()}
+            className="shadow-2xl"
+            color="primary"
+          >
+            <IonIcon icon={add} className="text-2xl" />
           </IonFabButton>
         </IonFab>
       </div>

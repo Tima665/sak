@@ -10,10 +10,14 @@ export default defineConfig({
   plugins: [react(), legacy()],
   define: {
     global: 'globalThis',
+    'process.env': '{}',
   },
   resolve: {
     alias: {
       buffer: 'buffer',
+      stream: 'stream-browserify',
+      util: 'util',
+      process: 'process/browser',
     },
   },
   build: {
@@ -22,10 +26,12 @@ export default defineConfig({
       output: {
         format: 'es',
       },
+      external: [],
     },
   },
   optimizeDeps: {
-    include: ['buffer'],
+    include: ['buffer', 'stream-browserify', 'util', 'process'],
+    exclude: [],
     esbuildOptions: {
       target: 'esnext',
       supported: {
@@ -33,6 +39,7 @@ export default defineConfig({
       },
       define: {
         global: 'globalThis',
+        'process.env': '{}',
       },
     },
   },
