@@ -26,8 +26,6 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonSelect,
-  IonSelectOption,
 } from '@ionic/react';
 import {
   alarm,
@@ -48,7 +46,6 @@ interface AlarmItem {
   label: string;
   enabled: boolean;
   days: string[];
-  sound: string;
   vibrate: boolean;
 }
 
@@ -62,15 +59,6 @@ const DAYS_OF_WEEK = [
   { key: 'sun', label: 'Вс' },
 ];
 
-const ALARM_SOUNDS = [
-  { value: 'default', label: 'По умолчанию' },
-  { value: 'alarm_classic', label: 'Классический' },
-  { value: 'alarm_gentle', label: 'Мягкий' },
-  { value: 'alarm_rooster', label: 'Петух' },
-  { value: 'alarm_digital', label: 'Цифровой' },
-  { value: 'alarm_bells', label: 'Колокольчики' },
-];
-
 const AlarmClock: React.FC = () => {
   const [alarms, setAlarms] = useState<AlarmItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,7 +68,6 @@ const AlarmClock: React.FC = () => {
   );
   const [alarmLabel, setAlarmLabel] = useState('');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [selectedSound, setSelectedSound] = useState('alarm_classic');
   const [vibrateEnabled, setVibrateEnabled] = useState(true);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [alarmToDelete, setAlarmToDelete] = useState<number | null>(null);
@@ -133,9 +120,6 @@ const AlarmClock: React.FC = () => {
         alarmTime.setDate(alarmTime.getDate() + 1);
       }
 
-      const soundFile =
-        alarm.sound === 'default' ? 'alarm_classic.wav' : `${alarm.sound}.wav`;
-
       await LocalNotifications.schedule({
         notifications: [
           {
@@ -143,11 +127,10 @@ const AlarmClock: React.FC = () => {
             body: alarm.label || 'Время просыпаться!',
             id: alarm.id,
             schedule: { at: alarmTime },
-            sound: soundFile,
+            sound: 'alarm_classic.wav',
             channelId: 'alarm-channel',
             extra: {
               alarmId: alarm.id,
-              sound: alarm.sound,
               vibrate: alarm.vibrate,
             },
           },
@@ -197,7 +180,6 @@ const AlarmClock: React.FC = () => {
         label: 'Тестовый будильник',
         enabled: true,
         days: [],
-        sound: selectedSound,
         vibrate: vibrateEnabled,
       };
 
@@ -214,10 +196,7 @@ const AlarmClock: React.FC = () => {
             body: 'Это тест будильника. Нажмите, чтобы выключить.',
             id: 999999,
             schedule: { at: new Date(Date.now() + 1000) },
-            sound:
-              testAlarm.sound === 'default'
-                ? 'alarm_classic.wav'
-                : `${testAlarm.sound}.wav`,
+            sound: 'alarm_classic.wav',
             channelId: 'alarm-channel',
             extra: { isTest: true },
           },
@@ -244,10 +223,7 @@ const AlarmClock: React.FC = () => {
             body: currentRingingAlarm.label || 'Время просыпаться!',
             id: currentRingingAlarm.id + 10000,
             schedule: { at: snoozeTime },
-            sound:
-              currentRingingAlarm.sound === 'default'
-                ? 'alarm_classic.wav'
-                : `${currentRingingAlarm.sound}.wav`,
+            sound: 'alarm_classic.wav',
             channelId: 'alarm-channel',
           },
         ],
@@ -271,14 +247,12 @@ const AlarmClock: React.FC = () => {
       setSelectedTime(alarm.time);
       setAlarmLabel(alarm.label);
       setSelectedDays(alarm.days);
-      setSelectedSound(alarm.sound);
       setVibrateEnabled(alarm.vibrate);
     } else {
       setEditingAlarm(null);
       setSelectedTime(new Date().toISOString());
       setAlarmLabel('');
       setSelectedDays([]);
-      setSelectedSound('alarm_classic');
       setVibrateEnabled(true);
     }
     setIsModalOpen(true);
@@ -295,7 +269,6 @@ const AlarmClock: React.FC = () => {
       label: alarmLabel,
       enabled: true,
       days: selectedDays,
-      sound: selectedSound,
       vibrate: vibrateEnabled,
     };
 
@@ -469,20 +442,6 @@ const AlarmClock: React.FC = () => {
           </IonGrid>
 
           <IonItem>
-            <IonLabel position="stacked">Звук</IonLabel>
-            <IonSelect
-              value={selectedSound}
-              onIonChange={(e) => setSelectedSound(e.detail.value)}
-            >
-              {ALARM_SOUNDS.map((sound) => (
-                <IonSelectOption key={sound.value} value={sound.value}>
-                  {sound.label}
-                </IonSelectOption>
-              ))}
-            </IonSelect>
-          </IonItem>
-
-          <IonItem>
             <IonLabel>Вибрация</IonLabel>
             <IonToggle
               checked={vibrateEnabled}
@@ -533,19 +492,6 @@ const AlarmClock: React.FC = () => {
           </IonCardHeader>
           <IonCardContent>
             <IonItem>
-              <IonLabel>Звук</IonLabel>
-              <IonSelect
-                value={selectedSound}
-                onIonChange={(e) => setSelectedSound(e.detail.value)}
-              >
-                {ALARM_SOUNDS.map((sound) => (
-                  <IonSelectOption key={sound.value} value={sound.value}>
-                    {sound.label}
-                  </IonSelectOption>
-                ))}
-              </IonSelect>
-            </IonItem>
-            <IonItem>
               <IonLabel>Вибрация</IonLabel>
               <IonToggle
                 checked={vibrateEnabled}
@@ -595,13 +541,9 @@ const AlarmClock: React.FC = () => {
                         <p className="text-xs text-gray-500">
                           {formatDays(alarm.days)}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {
-                            ALARM_SOUNDS.find((s) => s.value === alarm.sound)
-                              ?.label
-                          }
-                          {alarm.vibrate && ' • Вибрация'}
-                        </p>
+                        {alarm.vibrate && (
+                          <p className="text-xs text-gray-500">Вибрация</p>
+                        )}
                       </div>
                     </div>
                     <div className="ml-4 flex flex-col gap-1">
