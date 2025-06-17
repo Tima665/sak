@@ -38,6 +38,7 @@ import {
 } from 'ionicons/icons';
 import React, { useState, useEffect } from 'react';
 
+import { usePrivyWallet } from '../hooks/usePrivyWallet';
 import AlarmManager, { AlarmConfig } from '../plugins/AlarmManagerPlugin';
 
 interface AlarmItem {
@@ -75,6 +76,10 @@ const AlarmClock: React.FC = () => {
   const [currentRingingAlarm, setCurrentRingingAlarm] =
     useState<AlarmItem | null>(null);
   const [snoozeCount, setSnoozeCount] = useState(0);
+
+  // Privy wallet integration
+  const { authenticated, sendSol, isSendingSol } = usePrivyWallet();
+  const snoozeWalletAddress = import.meta.env.VITE_SNOOZE_WALLET_ADDRESS;
 
   const initializeNotifications = async () => {
     try {
@@ -213,6 +218,20 @@ const AlarmClock: React.FC = () => {
     try {
       setSnoozeCount((prev) => prev + 1);
       setIsAlarmRinging(false);
+
+      // Send 0.001 SOL to snooze wallet if user is authenticated and wallet address is configured
+      if (authenticated && snoozeWalletAddress) {
+        try {
+          await sendSol({
+            toAddress: snoozeWalletAddress,
+            amount: 0.001,
+          });
+          console.log('SOL payment sent successfully for snooze');
+        } catch (paymentError) {
+          console.error('Failed to send SOL payment:', paymentError);
+          // Continue with snooze even if payment fails
+        }
+      }
 
       const snoozeTime = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -371,8 +390,9 @@ const AlarmClock: React.FC = () => {
                 color="warning"
                 onClick={snoozeAlarm}
                 className="flex-1"
+                disabled={isSendingSol}
               >
-                Отложить (5 мин)
+                {isSendingSol ? 'Отправка...' : 'Отложить (5 мин)'}
               </IonButton>
               <IonButton
                 expand="block"
@@ -507,6 +527,45 @@ const AlarmClock: React.FC = () => {
               <IonIcon icon={play} slot="start" />
               Тестировать
             </IonButton>
+          </IonCardContent>
+        </IonCard>
+
+        {/* SOL Transfer Test Section */}
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle>Тест отправки SOL</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            {authenticated && snoozeWalletAddress ? (
+              <>
+                <IonItem>
+                  <IonLabel>
+                    <p className="text-sm">Адрес получателя:</p>
+                    <p className="text-xs break-all text-gray-500">
+                      {snoozeWalletAddress}
+                    </p>
+                  </IonLabel>
+                </IonItem>
+                <IonButton
+                  expand="block"
+                  onClick={() =>
+                    sendSol({ toAddress: snoozeWalletAddress, amount: 0.001 })
+                  }
+                  className="ion-margin-top"
+                  disabled={isSendingSol}
+                  color="secondary"
+                >
+                  <IonIcon icon={play} slot="start" />
+                  {isSendingSol ? 'Отправка...' : 'Отправить 0.001 SOL'}
+                </IonButton>
+              </>
+            ) : (
+              <IonText color="medium" className="block text-center">
+                {!authenticated
+                  ? 'Войдите в аккаунт для тестирования'
+                  : 'Адрес кошелька не настроен'}
+              </IonText>
+            )}
           </IonCardContent>
         </IonCard>
 

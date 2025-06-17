@@ -1,5 +1,11 @@
 import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
-import { Connection, Transaction } from '@solana/web3.js';
+import {
+  Connection,
+  Transaction,
+  SystemProgram,
+  PublicKey,
+  LAMPORTS_PER_SOL,
+} from '@solana/web3.js';
 import { useMutation } from '@tanstack/react-query';
 
 // Use Helius RPC URL from environment variables
@@ -13,6 +19,15 @@ export interface PrivySignTransactionParams {
 export interface PrivySignTransactionResult {
   signature: string;
   encodedTransaction: string;
+}
+
+export interface PrivySendSolParams {
+  toAddress: string;
+  amount: number; // Amount in SOL
+}
+
+export interface PrivySendSolResult {
+  signature: string;
 }
 
 export const usePrivyWallet = () => {
@@ -80,6 +95,73 @@ export const usePrivyWallet = () => {
     },
   });
 
+  // Простая функция для отправки SOL используя подход из документации Privy
+  const sendSolMutation = useMutation<
+    PrivySendSolResult,
+    Error,
+    PrivySendSolParams
+  >({
+    mutationFn: async (params: PrivySendSolParams) => {
+      if (!ready || !authenticated) {
+        throw new Error('User not authenticated');
+      }
+
+      if (!solanaWallet) {
+        throw new Error('No Solana wallet found');
+      }
+
+      try {
+        console.log(`Sending ${params.amount} SOL to ${params.toAddress}...`);
+
+        // Create connection
+        const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+
+        // Get recent blockhash first
+        const { blockhash } = await connection.getLatestBlockhash();
+
+        // Build transaction like in Privy docs
+        const fromPubkey = new PublicKey(solanaWallet.address);
+        const toPubkey = new PublicKey(params.toAddress);
+        const lamports = Math.floor(params.amount * LAMPORTS_PER_SOL);
+
+        // Create transaction with proper blockhash
+        const transaction = new Transaction({
+          recentBlockhash: blockhash,
+          feePayer: fromPubkey,
+        });
+
+        // Add transfer instruction
+        transaction.add(
+          SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports,
+          }),
+        );
+
+        console.log('Transaction created, sending via Privy wallet...');
+
+        // Use wallet.sendTransaction directly as per Privy docs
+        const signature = await solanaWallet.sendTransaction!(
+          transaction,
+          connection,
+        );
+
+        console.log('Transaction sent successfully:', signature);
+
+        return {
+          signature:
+            typeof signature === 'string'
+              ? signature
+              : (signature as any)?.signature || signature,
+        };
+      } catch (error) {
+        console.error('SOL transfer failed:', error);
+        throw error;
+      }
+    },
+  });
+
   return {
     // Wallet info
     ready,
@@ -92,5 +174,10 @@ export const usePrivyWallet = () => {
     signTransaction: signTransactionMutation.mutateAsync,
     isSigningTransaction: signTransactionMutation.isPending,
     signTransactionError: signTransactionMutation.error,
+
+    // SOL sending
+    sendSol: sendSolMutation.mutateAsync,
+    isSendingSol: sendSolMutation.isPending,
+    sendSolError: sendSolMutation.error,
   };
 };

@@ -8,6 +8,14 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), legacy()],
+  define: {
+    global: 'globalThis',
+  },
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+    },
+  },
   build: {
     target: 'esnext',
     rollupOptions: {
@@ -17,10 +25,14 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
+    include: ['buffer'],
     esbuildOptions: {
       target: 'esnext',
       supported: {
         bigint: true,
+      },
+      define: {
+        global: 'globalThis',
       },
     },
   },

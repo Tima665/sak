@@ -1,3 +1,7 @@
+// Buffer polyfill для Solana в браузере
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider, theme } from 'antd';
 import React, { useEffect, useState } from 'react';
