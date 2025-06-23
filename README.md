@@ -445,6 +445,9 @@ npm run preview
 ### Mobile Development
 
 ```bash
+# Build
+npm run build
+
 # Sync with Capacitor
 npx cap sync
 
