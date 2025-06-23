@@ -17,6 +17,12 @@ export const PrivyProvider: React.FC<PropsWithChildren> = ({ children }) => {
           accentColor: '#4F46E5',
           showWalletLoginFirst: false,
         },
+        embeddedWallets: {
+          solana: {
+            createOnLogin: 'users-without-wallets',
+          },
+          showWalletUIs: false,
+        },
       }}
     >
       {children}
